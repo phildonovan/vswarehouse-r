@@ -19,10 +19,8 @@ httr2_mock_resp <- function(body, status = 200L) {
   )
 }
 
-# Mock vsw_perform (low-level) so error-checking logic still runs
 with_mock_vsw <- function(body, status = 200L, code) {
   ns <- getNamespace("vswarehouse")
-  # Set a key so vsw_get_key() doesn't error
   assign("key", "vs_testkey", envir = ns$.vsw_env)
   local_mocked_bindings(
     vsw_perform = function(...) httr2_mock_resp(body, status),
@@ -30,6 +28,16 @@ with_mock_vsw <- function(body, status = 200L, code) {
   )
   code
 }
+
+SERIES_LIST_BODY <- '[
+  {"name":"nz_cpi","title":"NZ CPI","source":"Stats NZ","namespace":"statsnz","description":""},
+  {"name":"nz_gdp","title":"NZ GDP","source":"OECD","namespace":"oecd","description":""}
+]'
+
+DATA_BODY <- '{"data":[
+  {"date":"2023-01-01","period":"2023Q1","value":100.0},
+  {"date":"2023-04-01","period":"2023Q2","value":101.5}
+]}'
 
 # ---------------------------------------------------------------------------
 # vs_key / auth
@@ -62,11 +70,38 @@ test_that("vsw_get_key errors when no key set anywhere", {
 # ---------------------------------------------------------------------------
 
 test_that("vs_list returns a data frame", {
-  with_mock_vsw('{"series":[{"name":"nz_cpi","title":"NZ CPI","source":"OECD"}]}', code = {
+  with_mock_vsw(SERIES_LIST_BODY, code = {
     result <- vs_list()
     expect_s3_class(result, "data.frame")
+    expect_equal(nrow(result), 2L)
+  })
+})
+
+test_that("vs_list filters by source", {
+  with_mock_vsw(SERIES_LIST_BODY, code = {
+    result <- vs_list("Stats NZ")
     expect_equal(nrow(result), 1L)
     expect_equal(result$name, "nz_cpi")
+  })
+})
+
+# ---------------------------------------------------------------------------
+# vs_list_* convenience wrappers
+# ---------------------------------------------------------------------------
+
+test_that("vs_list_statsnz returns only Stats NZ rows", {
+  with_mock_vsw(SERIES_LIST_BODY, code = {
+    result <- vs_list_statsnz()
+    expect_equal(nrow(result), 1L)
+    expect_equal(result$source, "Stats NZ")
+  })
+})
+
+test_that("vs_list_oecd returns only OECD rows", {
+  with_mock_vsw(SERIES_LIST_BODY, code = {
+    result <- vs_list_oecd()
+    expect_equal(nrow(result), 1L)
+    expect_equal(result$source, "OECD")
   })
 })
 
@@ -75,7 +110,7 @@ test_that("vs_list returns a data frame", {
 # ---------------------------------------------------------------------------
 
 test_that("vs_info returns a list", {
-  with_mock_vsw('{"name":"nz_cpi","title":"NZ Consumer Price Index","source":"OECD"}', code = {
+  with_mock_vsw('{"name":"nz_cpi","title":"NZ Consumer Price Index","source":"Stats NZ"}', code = {
     result <- vs_info("nz_cpi")
     expect_type(result, "list")
     expect_equal(result$name, "nz_cpi")
@@ -86,14 +121,54 @@ test_that("vs_info returns a list", {
 # vs_get
 # ---------------------------------------------------------------------------
 
-test_that("vs_get returns a data frame with Date column", {
-  body <- '{"data":[{"date":"2023-01-01","period":"2023Q1","value":100.0},{"date":"2023-04-01","period":"2023Q2","value":101.5}]}'
-  with_mock_vsw(body, code = {
+test_that("vs_get returns a vs_series with Date column", {
+  with_mock_vsw(DATA_BODY, code = {
     df <- vs_get("nz_cpi")
+    expect_s3_class(df, "vs_series")
     expect_s3_class(df, "data.frame")
     expect_equal(nrow(df), 2L)
     expect_s3_class(df$date, "Date")
-    expect_equal(df$value, c(100.0, 101.5))
+    expect_equal(attr(df, "vs_name"), "nz_cpi")
+  })
+})
+
+# ---------------------------------------------------------------------------
+# vs_get_* source functions
+# ---------------------------------------------------------------------------
+
+test_that("vs_get_statsnz tags result with Stats NZ source", {
+  with_mock_vsw(DATA_BODY, code = {
+    df <- vs_get_statsnz("nz_cpi")
+    expect_s3_class(df, "vs_series")
+    expect_equal(attr(df, "vs_source"), "Stats NZ")
+  })
+})
+
+test_that("vs_get_oecd tags result with OECD source", {
+  with_mock_vsw(DATA_BODY, code = {
+    df <- vs_get_oecd("nz_gdp")
+    expect_equal(attr(df, "vs_source"), "OECD")
+  })
+})
+
+test_that("vs_get_treasury tags result with NZ Treasury source", {
+  with_mock_vsw(DATA_BODY, code = {
+    df <- vs_get_treasury("treasury_fiscal_spending")
+    expect_equal(attr(df, "vs_source"), "NZ Treasury")
+  })
+})
+
+# ---------------------------------------------------------------------------
+# print.vs_series
+# ---------------------------------------------------------------------------
+
+test_that("print.vs_series includes series name and row count", {
+  with_mock_vsw(DATA_BODY, code = {
+    df <- vs_get_statsnz("nz_cpi")
+    output <- capture.output(print(df))
+    expect_true(any(grepl("nz_cpi", output)))
+    expect_true(any(grepl("Stats NZ", output)))
+    expect_true(any(grepl("2 rows", output)))
   })
 })
 
