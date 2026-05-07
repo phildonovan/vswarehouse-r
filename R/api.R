@@ -62,10 +62,14 @@ vs_info <- function(name, base_url = VSW_BASE_URL) {
 #' df <- vs_get("nz_cpi", start = "2020-01-01")
 #' vs_plot(df)
 #' }
-vs_get <- function(name, start = NULL, end = NULL, base_url = VSW_BASE_URL) {
+vs_get <- function(name, start = NULL, end = NULL, limit = NULL,
+                   base_url = VSW_BASE_URL) {
+  # Server-side: limit=0 means "as many rows as your plan allows" (50,000 cap on
+  # Free/Starter, unlimited on Pro). NULL on the R side maps to limit=0.
   params <- list()
   if (!is.null(start)) params$start <- start
   if (!is.null(end))   params$end   <- end
+  params$limit <- if (is.null(limit)) 0L else as.integer(limit)
 
   resp <- do.call(vsw_get,
     c(list(paste0("/v1/series/", name, "/data"), base_url = base_url), params))
