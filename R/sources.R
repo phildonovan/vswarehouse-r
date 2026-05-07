@@ -3,8 +3,10 @@
 # with the source label, enabling the print method and vs_plot() caption.
 
 .vs_get_source <- function(name, source, start = NULL, end = NULL,
-                            limit = NULL, base_url = VSW_BASE_URL) {
-  df <- vs_get(name, start = start, end = end, limit = limit, base_url = base_url)
+                            limit = NULL, as_sf = NULL,
+                            base_url = VSW_BASE_URL) {
+  df <- vs_get(name, start = start, end = end, limit = limit,
+               as_sf = as_sf, base_url = base_url)
   attr(df, "vs_source") <- source
   df
 }
@@ -30,7 +32,13 @@
 #' @param limit Max rows to return. Default `NULL` requests the full dataset
 #'   (server enforces a 50,000-row cap on Free/Starter plans; Pro is unlimited).
 #'   Pass an integer to request fewer rows.
-#' @return A `vs_series` data frame.
+#' @param as_sf Convert geospatial datasets to an `sf` object (CRS = WGS84).
+#'   `NULL` (default) auto-converts when the dataset has a `geometry_wkt`
+#'   column AND the `sf` package is installed. `TRUE` forces conversion (errors
+#'   if `sf` is missing). `FALSE` keeps the raw WKT string column.
+#'   Install with `install.packages("sf")`.
+#' @return A `vs_series` data frame, or an `sf` object when geometry is present
+#'   and conversion is enabled.
 #' @export
 #' @examples
 #' \dontrun{
@@ -38,8 +46,8 @@
 #' df <- vs_get_statsnz("nz_cpi", start = "2015-01-01")
 #' vs_plot(df)
 #' }
-vs_get_statsnz <- function(name, start = NULL, end = NULL, limit = NULL) {
-  .vs_get_source(name, "Stats NZ", start = start, end = end, limit = limit)
+vs_get_statsnz <- function(name, start = NULL, end = NULL, limit = NULL, as_sf = NULL) {
+  .vs_get_source(name, "Stats NZ", start = start, end = end, limit = limit, as_sf = as_sf)
 }
 
 #' List all Stats NZ series
@@ -55,8 +63,8 @@ vs_list_statsnz <- function() .vs_list_source("Stats NZ")
 #' Fetch an OECD series
 #' @inheritParams vs_get_statsnz
 #' @export
-vs_get_oecd <- function(name, start = NULL, end = NULL, limit = NULL) {
-  .vs_get_source(name, "OECD", start = start, end = end, limit = limit)
+vs_get_oecd <- function(name, start = NULL, end = NULL, limit = NULL, as_sf = NULL) {
+  .vs_get_source(name, "OECD", start = start, end = end, limit = limit, as_sf = as_sf)
 }
 
 #' List all OECD series
@@ -71,8 +79,8 @@ vs_list_oecd <- function() .vs_list_source("OECD")
 #' Fetch an RBNZ series
 #' @inheritParams vs_get_statsnz
 #' @export
-vs_get_rbnz <- function(name, start = NULL, end = NULL, limit = NULL) {
-  .vs_get_source(name, "RBNZ", start = start, end = end, limit = limit)
+vs_get_rbnz <- function(name, start = NULL, end = NULL, limit = NULL, as_sf = NULL) {
+  .vs_get_source(name, "RBNZ", start = start, end = end, limit = limit, as_sf = as_sf)
 }
 
 #' List all RBNZ series
@@ -87,8 +95,8 @@ vs_list_rbnz <- function() .vs_list_source("RBNZ")
 #' Fetch a NZ Treasury series
 #' @inheritParams vs_get_statsnz
 #' @export
-vs_get_treasury <- function(name, start = NULL, end = NULL, limit = NULL) {
-  .vs_get_source(name, "NZ Treasury", start = start, end = end, limit = limit)
+vs_get_treasury <- function(name, start = NULL, end = NULL, limit = NULL, as_sf = NULL) {
+  .vs_get_source(name, "NZ Treasury", start = start, end = end, limit = limit, as_sf = as_sf)
 }
 
 #' List all NZ Treasury series
@@ -103,8 +111,8 @@ vs_list_treasury <- function() .vs_list_source("NZ Treasury")
 #' Fetch a LINZ series
 #' @inheritParams vs_get_statsnz
 #' @export
-vs_get_linz <- function(name, start = NULL, end = NULL, limit = NULL) {
-  .vs_get_source(name, "LINZ", start = start, end = end, limit = limit)
+vs_get_linz <- function(name, start = NULL, end = NULL, limit = NULL, as_sf = NULL) {
+  .vs_get_source(name, "LINZ", start = start, end = end, limit = limit, as_sf = as_sf)
 }
 
 #' List all LINZ series
@@ -119,8 +127,8 @@ vs_list_linz <- function() .vs_list_source("LINZ")
 #' Fetch a Stats NZ Geospatial dataset
 #' @inheritParams vs_get_statsnz
 #' @export
-vs_get_statsnz_geo <- function(name, start = NULL, end = NULL, limit = NULL) {
-  .vs_get_source(name, "Stats NZ Geospatial", start = start, end = end, limit = limit)
+vs_get_statsnz_geo <- function(name, start = NULL, end = NULL, limit = NULL, as_sf = NULL) {
+  .vs_get_source(name, "Stats NZ Geospatial", start = start, end = end, limit = limit, as_sf = as_sf)
 }
 
 #' List all Stats NZ Geospatial datasets
@@ -135,8 +143,8 @@ vs_list_statsnz_geo <- function() .vs_list_source("Stats NZ Geospatial")
 #' Fetch an MBIE dataset
 #' @inheritParams vs_get_statsnz
 #' @export
-vs_get_mbie <- function(name, start = NULL, end = NULL, limit = NULL) {
-  .vs_get_source(name, "MBIE", start = start, end = end, limit = limit)
+vs_get_mbie <- function(name, start = NULL, end = NULL, limit = NULL, as_sf = NULL) {
+  .vs_get_source(name, "MBIE", start = start, end = end, limit = limit, as_sf = as_sf)
 }
 
 #' List all MBIE datasets
@@ -151,8 +159,8 @@ vs_list_mbie <- function() .vs_list_source("MBIE")
 #' Fetch a Waka Kotahi (NZTA) dataset
 #' @inheritParams vs_get_statsnz
 #' @export
-vs_get_nzta <- function(name, start = NULL, end = NULL, limit = NULL) {
-  .vs_get_source(name, "Waka Kotahi", start = start, end = end, limit = limit)
+vs_get_nzta <- function(name, start = NULL, end = NULL, limit = NULL, as_sf = NULL) {
+  .vs_get_source(name, "Waka Kotahi", start = start, end = end, limit = limit, as_sf = as_sf)
 }
 
 #' List all Waka Kotahi datasets
@@ -167,8 +175,8 @@ vs_list_nzta <- function() .vs_list_source("Waka Kotahi")
 #' Fetch an MSD dataset
 #' @inheritParams vs_get_statsnz
 #' @export
-vs_get_msd <- function(name, start = NULL, end = NULL, limit = NULL) {
-  .vs_get_source(name, "MSD", start = start, end = end, limit = limit)
+vs_get_msd <- function(name, start = NULL, end = NULL, limit = NULL, as_sf = NULL) {
+  .vs_get_source(name, "MSD", start = start, end = end, limit = limit, as_sf = as_sf)
 }
 
 #' List all MSD datasets
@@ -183,8 +191,8 @@ vs_list_msd <- function() .vs_list_source("MSD")
 #' Fetch an NZ Police / MoJ dataset
 #' @inheritParams vs_get_statsnz
 #' @export
-vs_get_police <- function(name, start = NULL, end = NULL, limit = NULL) {
-  .vs_get_source(name, "NZ Police / MoJ", start = start, end = end, limit = limit)
+vs_get_police <- function(name, start = NULL, end = NULL, limit = NULL, as_sf = NULL) {
+  .vs_get_source(name, "NZ Police / MoJ", start = start, end = end, limit = limit, as_sf = as_sf)
 }
 
 #' List all NZ Police / MoJ datasets

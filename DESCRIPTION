@@ -1,6 +1,6 @@
 Package: vswarehouse
 Title: Client for the vs-warehouse Statistical Data API
-Version: 0.3.0
+Version: 0.4.0
 Authors@R: person("Virtus Solutions", email = "api@virtus-solutions.io", role = c("aut", "cre"))
 Description: Provides convenient access to the vs-warehouse REST API
     (<https://api.virtus-solutions.io>), which serves official economic and
@@ -22,5 +22,6 @@ Suggests:
     tibble (>= 3.0.0),
     testthat (>= 3.0.0),
     httptest2,
-    withr
+    withr,
+    sf (>= 1.0)
 Config/testthat/edition: 3

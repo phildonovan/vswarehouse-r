@@ -193,3 +193,40 @@ test_that("404 raises not found error", {
     expect_error(vs_get("bad_series"), "Not found")
   })
 })
+
+# ---------------------------------------------------------------------------
+# Geospatial — as_sf
+# ---------------------------------------------------------------------------
+
+GEO_DATA_BODY <- '{"data":[
+  {"address_id":1,"full_address":"1 Main Rd","geometry_wkt":"POINT (174.78 -41.28)"},
+  {"address_id":2,"full_address":"2 Main Rd","geometry_wkt":"POINT (174.79 -41.29)"}
+]}'
+
+test_that("vs_get auto-converts to sf when geometry_wkt + sf available", {
+  skip_if_not_installed("sf")
+  with_mock_vsw(GEO_DATA_BODY, code = {
+    df <- vs_get("nz_addresses")
+    expect_s3_class(df, "sf")
+    expect_true("geometry" %in% names(df))
+    expect_false("geometry_wkt" %in% names(df))
+    expect_equal(sf::st_crs(df)$epsg, 4326)
+  })
+})
+
+test_that("vs_get with as_sf=FALSE keeps geometry_wkt as a string column", {
+  with_mock_vsw(GEO_DATA_BODY, code = {
+    df <- vs_get("nz_addresses", as_sf = FALSE)
+    expect_false(inherits(df, "sf"))
+    expect_true("geometry_wkt" %in% names(df))
+    expect_true(is.character(df$geometry_wkt))
+  })
+})
+
+test_that("vs_get on non-geospatial dataset returns vs_series even when sf is installed", {
+  with_mock_vsw(DATA_BODY, code = {
+    df <- vs_get("nz_cpi")
+    expect_false(inherits(df, "sf"))
+    expect_s3_class(df, "vs_series")
+  })
+})

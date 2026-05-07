@@ -4,7 +4,7 @@
 \alias{vs_get_statsnz}
 \title{Fetch a Stats NZ series}
 \usage{
-vs_get_statsnz(name, start = NULL, end = NULL, limit = NULL)
+vs_get_statsnz(name, start = NULL, end = NULL, limit = NULL, as_sf = NULL)
 }
 \arguments{
 \item{name}{Dataset identifier, e.g. \code{"nz_cpi"}.}
@@ -16,9 +16,16 @@ vs_get_statsnz(name, start = NULL, end = NULL, limit = NULL)
 \item{limit}{Max rows to return. Default \code{NULL} requests the full dataset
 (server enforces a 50,000-row cap on Free/Starter plans; Pro is unlimited).
 Pass an integer to request fewer rows.}
+
+\item{as_sf}{Convert geospatial datasets to an \code{sf} object (CRS = WGS84).
+\code{NULL} (default) auto-converts when the dataset has a \code{geometry_wkt}
+column AND the \code{sf} package is installed. \code{TRUE} forces conversion (errors
+if \code{sf} is missing). \code{FALSE} keeps the raw WKT string column.
+Install with \code{install.packages("sf")}.}
 }
 \value{
-A \code{vs_series} data frame.
+A \code{vs_series} data frame, or an \code{sf} object when geometry is present
+and conversion is enabled.
 }
 \description{
 A named wrapper over \code{\link[=vs_get]{vs_get()}} that tags the result with the

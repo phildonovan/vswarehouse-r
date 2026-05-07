@@ -4,7 +4,7 @@
 \alias{vs_get_treasury}
 \title{Fetch a NZ Treasury series}
 \usage{
-vs_get_treasury(name, start = NULL, end = NULL, limit = NULL)
+vs_get_treasury(name, start = NULL, end = NULL, limit = NULL, as_sf = NULL)
 }
 \arguments{
 \item{name}{Dataset identifier, e.g. \code{"nz_cpi"}.}
@@ -16,6 +16,12 @@ vs_get_treasury(name, start = NULL, end = NULL, limit = NULL)
 \item{limit}{Max rows to return. Default \code{NULL} requests the full dataset
 (server enforces a 50,000-row cap on Free/Starter plans; Pro is unlimited).
 Pass an integer to request fewer rows.}
+
+\item{as_sf}{Convert geospatial datasets to an \code{sf} object (CRS = WGS84).
+\code{NULL} (default) auto-converts when the dataset has a \code{geometry_wkt}
+column AND the \code{sf} package is installed. \code{TRUE} forces conversion (errors
+if \code{sf} is missing). \code{FALSE} keeps the raw WKT string column.
+Install with \code{install.packages("sf")}.}
 }
 \description{
 Fetch a NZ Treasury series

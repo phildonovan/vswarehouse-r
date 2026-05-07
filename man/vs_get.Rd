@@ -4,7 +4,14 @@
 \alias{vs_get}
 \title{Fetch time-series data}
 \usage{
-vs_get(name, start = NULL, end = NULL, limit = NULL, base_url = VSW_BASE_URL)
+vs_get(
+  name,
+  start = NULL,
+  end = NULL,
+  limit = NULL,
+  as_sf = NULL,
+  base_url = VSW_BASE_URL
+)
 }
 \arguments{
 \item{name}{Series identifier, e.g. \code{"nz_cpi"}.}
